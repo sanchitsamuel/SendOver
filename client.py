@@ -15,7 +15,6 @@ PORT = 8000
 SERVER = None
 
 def broadcast ():
-    global SERVER
     info = 'name=user&host='+gethostname()
     broadc = socket(AF_INET, SOCK_DGRAM)
     broadc.bind(('', 0))
@@ -40,6 +39,12 @@ def broadcast ():
         broad.close(
         sys.exit()
     '''
+
+def beacon ():
+    global SERVER
+    if not SERVER:
+        broadcast()
+    time.sleep(2)
 
 def get_server ():
     global SERVER
@@ -94,7 +99,7 @@ def connect_to_server ():
 def main ():
     global SERVER
     
-    broad = threading.Thread(target=broadcast)
+    broad = threading.Thread(target=beacon)
     broad.setDaemon(True)
     broad.start()
     

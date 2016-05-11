@@ -35,7 +35,8 @@ def send_over (filename, sock):
     
 def look_for_clients ():
     tries = 4
-    for x in range(0, 4):
+    global TO_SEND
+    while 1:
         s = socket(AF_INET, SOCK_DGRAM)
         s.bind(('',8001))
         m = s.recvfrom(4096)
@@ -49,7 +50,7 @@ def initiate_client (ip):
     print "Connecting to " + ip
     init = socket(AF_INET, SOCK_STREAM)
     init.connect((ip, 9001))
-    init.send('ready')
+    init.send(gethostname())
     init.close()
     
 def send_file_list (sock):

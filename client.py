@@ -13,6 +13,7 @@ import sys
 
 PORT = 8000
 SERVER = None
+HOST = None
 
 def broadcast ():
     info = 'name=user&host='+gethostname()
@@ -42,12 +43,14 @@ def broadcast ():
 
 def beacon ():
     global SERVER
-    if not SERVER:
-        broadcast()
-    time.sleep(2)
+    while 1:
+        if not SERVER:
+            broadcast()
+        time.sleep(2)
 
 def get_server ():
     global SERVER
+    global HOST
     serv = socket(AF_INET, SOCK_STREAM)
     serv.bind(('', 9001))
     serv.listen(5)
@@ -55,7 +58,7 @@ def get_server ():
         c, addr = serv.accept()
         if addr:
             SERVER = addr[0]
-            print SERVER
+            HOST = c.recv(1024)
             serv.close()
             break
 
@@ -66,7 +69,6 @@ def connect_to_server ():
     conn.connect((SERVER, 4000))
     end = None
     files = conn.recv(1024)                                                             # receive list of files
-    print files
     if '&' in files:
         FILES = files.split('&')
     else:
@@ -86,18 +88,26 @@ def connect_to_server ():
             data = conn.recv(1024)
             total_reveived = len(data)
             f.write(data)
+            check = 0
             while total_reveived < file_size:
                 data = conn.recv(1024)
                 total_reveived += len(data)
+                if len(data) == 0:
+                    check = check + 1
+                    if check == 1000:
+                        break
                 percent = "{0:.2f}".format((total_reveived/float(file_size))*100)
-                print os.path.basename(i)+'\t\t\t['+(percent)+" %]\r",
+                print os.path.basename(i)+'\t\t\t['+str(total_reveived)+': '+(percent)+" %]\r",
                 f.write(data)
             print "\n"
+            if check == 1000:
+                print "Error while transfering data"
     
     conn.close()
 
 def main ():
     global SERVER
+    global HOST
     
     broad = threading.Thread(target=beacon)
     broad.setDaemon(True)
@@ -108,7 +118,7 @@ def main ():
     # serv.setDaemon(True)
     # serv.start()
     get_server()
-    print "Starting to receive files from " + SERVER
+    print "Starting to receive files from " + str(HOST)
     connect_to_server()
     
     

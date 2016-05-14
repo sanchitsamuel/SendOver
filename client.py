@@ -14,6 +14,10 @@ import sys
 PORT = 8000
 SERVER = None
 HOST = None
+FILE_SIZE = None
+TOTAL_RECEIVED = None
+SPEED = None
+
 
 def broadcast ():
     info = 'name=user&host='+gethostname()
@@ -61,9 +65,23 @@ def get_server ():
             HOST = c.recv(1024)
             serv.close()
             break
+'''
+def calculate_speed ():
+    global SPEED
+    global FILE_SIZE
+    global TOTAL_RECEIVED
+    i = 0
+    avg = 0
 
+    while TOTAL_RECEIVED > FILE_SIZE:
+	temp = TOTAL_RECEIVED
+	
+	SPEED = 
+'''
 def connect_to_server ():
     global SERVER
+    global FILE_SIZE
+    global TOTAL_RECEIVED
     FILES = []
     conn = socket(AF_INET, SOCK_STREAM)
     conn.connect((SERVER, 4000))
@@ -74,30 +92,29 @@ def connect_to_server ():
     else:
         FILES.append(files)
     
-    file_size = 0
-    
     for i in FILES:
         time.sleep(2)
         conn.send(i)                                                                    # send a file location from list
         data = conn.recv(1024)                                                          # receive file info
         if data[:1] == 'S':
             print "Receiving " + os.path.basename(i) + " of size " + data[2:]
-            file_size = long(data[2:])
+            FILE_SIZE = long(data[2:])
             conn.send('OK')                                                             # send acknolegement to start receive
             f = open('new_'+os.path.basename(i), 'wb')
             data = conn.recv(1024)
-            total_reveived = len(data)
+            TOTAL_RECEIVED = len(data)
             f.write(data)
             check = 0
-            while total_reveived < file_size:
+            while TOTAL_RECEIVED < FILE_SIZE:
                 data = conn.recv(1024)
-                total_reveived += len(data)
+                TOTAL_RECEIVED += len(data)
                 if len(data) == 0:
                     check = check + 1
-                    if check == 1000:
+                    if check == 100000:
                         break
-                percent = "{0:.2f}".format((total_reveived/float(file_size))*100)
-                print os.path.basename(i)+'\t\t\t['+str(total_reveived)+': '+(percent)+" %]\r",
+                percent = "{0:.2f}".format((TOTAL_RECEIVED/float(FILE_SIZE))*100)
+		conn.send(percent)
+                print os.path.basename(i)+'\t\t\t['+str(TOTAL_RECEIVED/1024/1024)+' MB: '+(percent)+" %]\r",
                 f.write(data)
             print "\n"
             if check == 1000:

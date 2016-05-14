@@ -19,7 +19,6 @@ def send_over (filename, sock):
     if os.path.isfile(filename):
         sock.send("S " + str(os.path.getsize(filename)))                    # send file info
         userResponse = sock.recv(1024)                                      # wait for user acknolegement
-        print userResponse[:2]
         if userResponse[:2] == 'OK':
             with open(filename, "rb") as f:
                 bytes = f.read(1024)
@@ -27,7 +26,10 @@ def send_over (filename, sock):
                 while bytes != "":
                     bytes = f.read(1024)
                     sock.send(bytes)
+                    percentage = sock.recv(1024)
+                    print percentage + "% sent \r",
                 sock.send('END')
+                print "Done"
     else:
         sock.send("ERR")
     
